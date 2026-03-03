@@ -1,0 +1,200 @@
+=================================================================
+
+  Morroblivion v067 Release Notes
+  2023-June-4
+
+=================================================================
+Known Issues
+=================================================================
+The character generation class quiz does not correctly show the results window with your assigned class. However, you can still check your assigned class on the Character Screen, and you can make modifications to Race, Class or Birthsign prior to leaving the Census Office.
+
+Several cosmetic issues from v066 have not yet been fixed since they are not critical bugs that prevent finishing the game: landscape heightmaps will z-fight with water level in several areas.
+
+
+=================================================================
+Compatibility
+=================================================================
+Morroblivion v067 is NOT compatible with savegames made using Morroblivion v066 or other previous versions.  You must start a new game after installing v066.
+
+Morroblivion v067 is NOT compatible with any versions of the Morroblivion Unofficial Patch or the Unified Hotfix Addon.  It is POTENTIALLY incompatible with any mod that used any previous version of the Morrowind_ob.esm master file.
+
+Current master is NOT compatible with any mod that was created using the original conversion to Morroblivion by the ESP Converter. This includes all early Morroblivion mods. 
+
+Morroblivion is located in separate worldspace and is compatible with (but not affected by) any mods that modify Oblivion, including OOO, MMM, FCOM, Unique Landscapes, Better Cities and others.
+
+Morroblivion is compatible and affected by mods that modify Oblivion game mechanics - combat, magic and stealth.
+
+
+=================================================================
+The Morrowind Main Quest Notes
+=================================================================
+
+Meeting Caius Cosades
+In Morrowind if you are less than 4th level Caius will give you 200 Drakes and tell you to go get some experience.  However, you don't actually have to get it for him to give you the quest.  To me that seems like a bug.  That bug has been fixed in this version.  When Caius tells you to get some experience he really means it!
+
+You must be Level 4 to start the Main Quest.
+
+
+Defeating Dagoth Ur
+The final confrontation with Dagoth Ur and the Heart of Lorkhan is very similar to, but still not perfectly following the way it was in Morrowind.  There is still some work left to do and some items that need to be added.  Specifically, the animation for the Akulakhan collapsing.
+
+I have had significant difficulty getting the Heart of Lorkhan to hold still.  In Oblivion, with the converted Akulakhan mesh, the Heart of Lorkhan simply will not fit under the pipes that are supposed to be drawing it's power to the Akulakhan. It is therefore found in front of the pipes.  I'm not a 3D Modeler; there is nothing I can do about that.
+
+The Heart of Lorkhan also recoils when hit, so it is possible to knock it around.  I do move it back where it belongs every few seconds, but I absolutely cannot make it hold still; I'm not sure that is possible in Oblivion.
+
+However, shortcomings notwithstanding, the entire sequence is about as good as I can get it.
+
+I have added the encounter with Azura, and simulated her gift of the Ring.
+
+
+Sleepers Awake
+Oblivion is a little touchy about sleeping.  Sleeping doesn't always trigger the script, so if you want to do this part of the quest, make sure you sleep for longer periods of time.  Sometimes the game notices that you're sleeping after an hour, sometimes it takes three or four.  I've found that most of the time sleeping for Four Hours triggers the quest, but not always.
+
+
+Committing Murder
+There are two Stages during the Main Quest where the player must kill one or more NPC's to fulfill Destiny.  These NPC's belong to factions that, if killed by the player without provocation, will cause Oblivion to see this as "Murder," wich will of course cause Lucien Lachance to pay you a little visit...
+
+In both cases I have altered the dialog slightly so that it is possible to induce the NPC to attack you first, thereby bypassing Oblivion's definition of "Murder."
+
+A "Taunt" topic is added to all non-essential NPCs, allowing you to decrease their disposition enough to provoke an attack.
+
+
+Main Quest Stages:
+ * Stranger in a Strange Land (Chargen)
+ * Report to Caius Cosades
+ * Antabolis Informant
+ * Gra-Muzgob Informant
+ * Vivec Informants (x 3)
+ * Zainsubani Informant
+ * Meet Sul-Matuul
+ * Sixth House Base
+ * Corprus Cure
+ * Mehra Milo and the Lost Prophecies
+
+ * Path of the Incarnate
+
+>>> Fourth Trial 
+ * Redoran Hortator
+ * Hlaalu Hortator
+ * Telvanni Hortator
+
+>>> Fifth Trial
+ * Urshilaku Nerevarine
+ * Ahemmusa Nerevarine
+ * Zainab Nerevarine
+ * Erabenimsun Nerevarine
+
+ * Hortator and Nerevarine (Meet Vivec)
+
+ * The Citadels of the Sixth House
+ * Defeat Dagoth Ur
+
+ * Sleepers Awake
+
+=================================================================
+All Morrowind Guilds have minimum requirements.
+=================================================================
+
+The information is on the WIKI, just maybe not presented in a way you would be expecting.
+
+Near the middle of the page there is a table listing Ranks, "Fighters' Guild Ranks," for instance.
+
+This table indicates 30 Strength and 30 Endurance for level 0, Associate.
+
+There is an "Advancement" Quest for each guild that tracks three things:
+1. Both Primary Attributes must be at or above the stated level for the rank.
+2. One of the Primary Skills must be at or above the stated level for the rank.
+3. "Reputation Points" earned by completing quests.
+
+I was not able to get the information on required "Reputation Points" from the WIKI; for this I had to actually go into the Morrowind CS to see how many points were needed for each rank.
+
+
+
+=================================================================
+House Strongholds
+=================================================================
+For Stronghold construction, the scaffolding and miscellaneous construction supplies strewn about the area in Morrowind did not make it through conversion, and I have not gone back to try to recrate this.  I have put markers in place for them, but they currently point to nothing.
+
+Currently, the first time you visit Hlaalu or Redoran Stronghold to check on progress, the area is completely barren with just the foreman standing there to tell you that "progress is going well."
+
+
+=================================================================
+House Hlaalu Quest Line Notes
+=================================================================
+I have updated the "Go Free" Dialog with Slaves.  This will increment a counter so that Slaves, Jobasha, and Ilmeni Dren will all react properly to the Twin Lamps and Freed Slave Counter.  However, the mechanics are not as clean as I would like, and I may revisit this later.  Currently, freeing a slave sends them away immediately, rather than having them walk away normally.  They seem to disappear, but are in fact being moved out of the way to a holding cell.  This is so you don't find them still there standing around days or weeks after you have set them free.  If you look on the ground where they were, you will see that they all remove their wrist irons before leaving.
+
+According to the Wiki, it seemed possible to progress to the rank of Counciler, but I found nothing in the Morroind CS that wouldmake this possible.  Everything I found indicates that progression is supoosed to go directly from House Father to Grandmaster, so that is what this version does as well.  When you complete Dren's final Quest, he will promote you to Grandmaster.
+
+There are a number of times when the player must kill an NPC to complete the quest.  In ALL cases, I have altered the dialog so it is possible to induce the NPC to attack first.
+
+It is possible to complete the Odirniran without killing the Necromancer, and thereby not conflicting with the Telvanni Quest of the same name.
+
+
+=================================================================
+House Redoran Quest Line Notes
+=================================================================
+To finish the Redoran Stronghold it is necessary to find some single women willing to move to Bal Isra to be the wives of the men there.  I have only debugged the women in Ald-Ruhn, not the other possible candidates.
+
+It was already possible to complete the Shishi Quest without killing the Telvanni Wizard, so I have not changed this quest.
+
+
+=================================================================
+House Telvanni Quest Line Notes
+=================================================================
+There are several Quests for House Telvanni that needed some creativity.  Oblivion cannot recognize the difference between a Soul Gem used by the player to trap souls.  Therefore, it was impossible to do as in Morrowind, where the player needed to go trap two Strong Souls.  I have changed this to needing two "True" Soul Gems.  Since I do not believe these are readily available in Morrowind, I have made it possible to purchase them from Llunela Hleran at inflated prices.
+
+This Quest Line contains two Quests that involve fights with other Houses.  It is possible to complete both as intended, however, I have also made it possible to complete both peacefully.
+It is possible to complete the Shishi Quest by escorting the Telvanni Wizard out, thereby not conflicting with the Redoran Quest of the same name.
+It is possible to complete the Odirniran Quest by convincing the Hlaalu to leave peacefully, thereby not conflicting with the Hlaalu Quest of the same name.
+
+Additionally, finding two books for the Stronghold conflict with two Quests from the Mages' Guild.  I have created unique Telvanni versions of the books to remove this conflict.
+
+
+=================================================================
+Fighters' Guild Quest Line Notes
+=================================================================
+I have altered some of the dialog so that it is possible to induce NPC's to attack you so the game doesn't flag your actions as murder.  Plus, there is always the taunt topic.
+
+I have made it possible to "complete" the last two of Lorbumol gro-Aglakh's quests by choosing not to carry them out.  This doesn't actually change the quests at all; this just makes it possible to refuse them and have them removed from your active list of quests.  Lorbumol gro-Aglakh will still not give you any more quests if you refuse, and will become very irritated with you if you try.
+
+
+=================================================================
+Mages' Guild Quest Line Notes
+=================================================================
+Trebonius takes a bit to walk to the Arena. Having your character wait a few hours is advisible.
+
+A special "Soul of an Ash Ghoul" has been added to one specific creature to better satisfy Skink-in-Tree's-Shade's quest of the same name.
+
+A Greeting Topic has been added that will enable you to Complete the Quest by lying to Trebonius about killing the Telvanni Counselers.  You get the faction bonus, but not the Disposition Bonus or the amulet.
+
+
+=================================================================
+Thieves' Guild Quest Line Notes
+=================================================================
+Some of the items are VERY hard to steal without incurring a bounty, due to Oblivion's improved AI.
+
+
+=================================================================
+Tribunal Temple Quest Line Notes
+=================================================================
+Pilgrimage of the Seven Graces-Oblivion's leveled lists don't have many empty soul gems, so for the Ghostgate pilgrimage I added a "Petty Soulgem Discharger" to the Mages Guild in Vivec. It on a dresser in one of the bedrooms.
+
+
+=================================================================
+Imperial Cult Quest Line Notes
+=================================================================
+Adusamsi (from the Ice Blade of the Monarch quest) occasionally gets killed by the Daedra if you aren't quick enough.
+
+
+=================================================================
+Morag Tong Quest Line Notes
+=================================================================
+The Morag Tong quest integrates with the Morrowind Guards and a system has been set up to allow players to 'present writs' to absolve them of assasinations that are reported as murders. Each writ for a reported murder will deduct 1040 bounty, the price of 1 assault and 1 murder.
+
+The main issues with the quest that I am aware of are:
+- Quest names are too long
+- Guards interupt assasination fights in progress, this can cause annoyances when presenting Writs, its best to load a new area and surender to a 'fresh' guard
+- Assasinations may be hard as other NPC's like to join the fight
+- Quest givers may say things like "he can be found HERE in vivec" when you arnt in vivec at the time
+- The journal takes a few seconds to update after an assasination (this is to give the bounty time to update)
+- Navil and Ranes Ienith are trying to attack you before you open the door to the room they are in, and Ranes is already spawned, as opposed to Morrowind where he appears behind you when you attack Navil.

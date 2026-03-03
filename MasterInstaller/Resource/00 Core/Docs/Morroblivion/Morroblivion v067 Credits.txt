@@ -1,0 +1,287 @@
+=================================================================
+
+ Morroblivion v067 Credits
+ 2023-June-4
+
+=================================================================
+
+
+Direct Contributors to this Project
+===========================================================================
+Thanks to Galadrielle, the inventor of "Morroblivion" without which none of this would be possible.
+
+
+Thank you to Zach, for providing the Morroblivion.com Website, without which
+none of this would be possible.
+
+
+A Special thanks to Thermador for taking over administration of the Morroblivion
+Web Site, for constant support, and for many tweaks and fixes along the way.
+
+
+Thanks to DaggerfallTeam for v065 and beyond, Website support and the complete overhaul of Morroblivion v64
+
+
+Thermador and Glorf97 - Morroblivion Installer.
+
+
+Big Applause to ponyrider0 for Tamriel Rebuilt Support, ModExporter and TWMP Morroblivion and much more!
+
+
+=====Assembling the master file====
+David Budreck (Dave B) - from the start till v057.
+Qwertyasdfgh - from v058 till v065. 
+ponyrider0 - v065.
+DaggerfallTeam - v065 -	v066 - v067.
+
+
+===Bugfixes===
+Qwertyasdfgh, Brainslasher, frond, llde, mi6c, Bullfrog, superliuk, Puddles, roxon_55, ponyrider0, oracus0, DaggerfallTeam
+Special thanks to all members of the Morroblivion.com community for help reporting bugs and testing fixes.
+
+
+===Quests===
+The Queen of the Ashlands - Morrowind Main Quest, Fighters' Guild, Mages' Guild, Thieves' Guild, Tribunal Temple, Imperial Cult, and Imperial Legion Quest lines, ALL Morrowind Miscellaneous Quests, Bloodmoon Main and Miscellaneous Quests
+Dave B - debugging the majority of Morrowind quests.
+Mooncat - Bal Molagmer Thieves' Guild quests.
+Ddmlink - Vampire Clan Quests & Morrowind Vampirism.
+Raditz and Thermador - Morag Tong Quest Line.
+EnvyDeveloper - East Empire Company Quests.
+Brainslasher - East Empire Company, Tribunal Main Quest, Tribunal Miscellaneous Quests, Siege at Firemoth, Entertainers and Master Index official plugins, gemeral bugfixing.
+Qwertyasdfgh - General Bugfixing, Tribunal Misc Quests, Helm of Tohan official plugin.
+llde - Bloodmoon Main and Miscellaneous quests.
+YoJeff - Dozens of misc quest fixes.
+
+
+====AI====
+Henshu - Balmora, Caldera, Ebonheart, Ald-Ruhn, Sadrith Mora, Musicians.
+OldWolf58 - various improvements.
+Qwertyasdfgh - Ald Velothi, Maar Gan, Hla Oad, Dagon Fel, Suran, Sadrith Mora, general improvements.
+Balthazar21 - Tel Branora.
+Oblisgr - Seyda Neen, Khuul.
+
+
+====NPC Faces===
+Queen of the Ashlands
+Didact1
+Hensu
+RobertNevelle
+ChasenCharran
+Qwertyasdfgh
+
+
+=====Creatures=====
+ * Alits by Hashmi, Updated Havoc by Eloth
+ * Ash Slaves by Savant
+ * Ash Slaves by Eloth
+ * Ash Zombies by Savant
+ * Ash Zombies by Eloth
+ * Ash Ghouls by Eloth
+ * Ash Ghouls by Savant
+ * Ascended Sleepers by Eloth
+ * Ash Vampires  by Eloth
+ * Betty Netch by Eloth
+ * Bull Netch by Eloth
+ * Bone Lords by Eloth, High Poly Conversion by Hashmi
+ * Corprus Stalker by Eloth
+ * Cliffracers by Hashmi, Updated Havoc by Eloth
+ * Daedroth by Hashmi
+ * Dremora by Hashmi
+ * Dreughs by Hashmi, Havok by Qwertyasdfgh
+ * Dwarven Spectre by Hashmi
+ * Frost Atronach by Hashmi
+ * Golden Saints (From Shivering Isles)
+ * Greater Bonewalkers by Eloth
+ * Kagouti by Hashmi, Updated Havoc by Eloth
+ * Kwama Foragers by Silgrad Tower team and John117
+ * Kwama Workers by Hashmi, Updated Havoc by Eloth
+ * Kwama Warriors by Eloth
+ * Kwama Queen by Hashmi
+ * Lame Corprus by Eloth
+ * Nix Hounds by Hashmi, Updated Havoc by Eloth
+ * Ogrims by Eloth
+ * Scrib by Eloth
+ * Shalk by Eloth
+ * Sphere Centurion by Eloth
+ * Steam Centurion by Eloth
+ * Storm Atronach by Hashmi
+ * Winged Twilights by Eloth
+ * Animated Silt Strider by Hashmi
+ * Vivec by Hashmi
+ * Yagrum Bagarn by Hashmi
+ * Hulking Fabricants, Imperfect, Morrowind Liches by Qwertyasdfgh
+ 
+
+=====Object Placement Fixes=====
+Popo14081976
+qwertyasdfgh
+roxon_55
+CemKey
+DaggerfallTeam
+ponyrider0
+
+
+======Game Mechanics=====
+RavenSW - Weapons rebalance.
+Raditz, Thermador, Qwertyasdfgh - Crime.
+Sot - Armor rebalance.
+Rosenkreuz - Economy rebalance.
+Seferoth - Skillbooks.
+Illspecko - the ability for players to Rent Rooms.
+Archangel221 - NPC trainers.
+Qwertyasdfgh - proper region names, merchant and cell ownership, enchantment rebalance, container sounds.
+Hashmi & Eloth - Morrowind Traps & Probes for disarming them.
+Noebus - Enchanting & Spellmaking, armor tweaks, creature rebalancing.
+Eazzy - Levitation scrips.
+Idle - Dagoth Ur/Ash Vampire weakening scripts.
+Xris - Morrowind transport.
+PaulDaMasterMan2 - map markers, water level fix.
+Iceburg333 and qwertyasdfgh - Morrowind Lava.
+Seldalore - Vampire fix.
+Haldur - extended Quest Journal Entries.
+Didact1 & Nobeus - Enchanted clothing fixes.
+ponyrider0
+
+
+=====Models and Textures=====
+Eloth - Morroblivion Visual Overhaul, Miscellaneous Item Replacements, Ingredient Replacements, numerous other fixes and imrovements.
+Yoshimo and Haldur - Ash and Blight Storms.
+Hashmi - Collision Redone mod.
+Darth South - Custom Icons.
+Coleruto - Better Vvardenfell map.
+Palpenious - Morrowind Jewelry meshes.
+HelpfulPerson - The Akulakhan conversion.
+Noebus - book pictures.
+SpoonyBrad - updated 1st person clothing meshes.
+Qwertyasdfgh - Dagoth Ur model, new weapon models, various fixes.
+rekom23 - collision optimisation for statics.
+Brainslasher - Morrowind shields and jewelry conversion.
+Billyro - steel weapon set.
+DaggerfallTeam - Complete Overhaul and Optimization of Textures and Models (May 2022)
+Surronti - Complete Overhaul of All Texture Normal Maps and Paralax
+YoJeff
+
+
+===========================================================================
+Resouces used
+===========================================================================
+Vvardenfell Imports by:
+-- themythofstrider
+-- Omegacron
+-- PacificMorrowind
+
+Chitin Armor and Weapon Set by Helborne.
+Daedric Lord Armor by Mcmuffin
+Ordinator Armor by Cyro
+Hircine Armor by Zenith92/JDfan
+waalx's broad poignard from the Nord set.
+
+Ghogiel's Armor Resource by Ghogiel
+Helborne's Mesh Resource by Helborne
+Chitin Armor and Weapon Set by Helborne.
+Ghogiel's Samurai armor
+Divine Guardian by PaleRider
+Nordic Warrior by PaleRider
+Paladin Equipment by PaleRider
+Underworld Armor by zertual pro
+Tyreal Armor by zertual pro
+Morrigan Set by jojjo
+DreadKnight Set by jojjo
+Phitt's Helmet Collection
+Ram Shield by Guncow
+Brigandine Armor by Wikinger9048
+Growlf's Hot Clothes v5 - by Growlf
+Alexscorpion's Deadly Shadows
+Adamantium Armor Suit by Alexscorpion
+Alexscorpion's sneaking gear
+Tda's Armoury
+Predator Mod vers. 6 by the Predator Team
+KURESE's NPR Knight Armor
+NPR's Knight Armor
+Umaril's Armor Separate by Selene310187
+"Masks" by jcarl904
+The Forgotten Shields by Painkiller_Rider
+Medieval Shields by Lhammonds
+Dark Tower Shield by Lhammonds
+Skeleton K's nightshade armor
+Skeleton K's dark illusion armor
+Luchaire's exnem warrior armor
+Ambassador of Darkness by Eyren and Robert Male version by Nivea
+Doppler's Armory - Ryu Doppler
+Her Hands Armor - Zenith92
+Helms of Legend by Shamblin Horde 
+Yaarm's fur and iron armor
+Lancillotto's butcher armor
+Hashshashin Armor v2.0 by Dimitri Mazieres
+Ranger Armor by Dimitri Mazieres
+Tel Auruhn Cuirass by Ginnungagap 
+Lich King armor by Jojjo
+Exnem's Warrior Armor
+Druid armor and weapons by tumbajamba
+Ordinator Armor by Cyro
+Old Dwemer Books textures by YarYulme
+Comberry bush model by Pherim
+Dwemer Mesh Improvement for Morroblivion by oracus0 and Champion of Hircine
+Landscape Texture Compilation by Tyddy
+Ket's Swirlwood Furniture retexture by ket
+Aesthesia - Stronghold textures by Rytelier
+Full Dwemer Retexture by Tyddy
+Better Rugs by multiple
+Redoran - Arkitektora Vol.2 by Tyddy
+Telvanni - Arkitektora of Vvardenfell by Tyddy
+Normal maps for Morrowind - Tamriel Rebuilt - OAAB - Skyrim HotN - Stirk and other mods by Mrovkogon
+Guar Skin Banners for OpenMW and Vanilla Morrowind by Lysol90
+AST Redware Texture Replacer by Aisis
+Long Live The Limeware - Retexture by anarkhya
+Hlaalu - Arkitektora Vol.2 by Tyddy
+Dry Stone Walls Revamped by darkfri01
+Overlooked Meshes Replacer by Flash3113
+Properly Smoothed Meshes by Stuporstar
+
+
+Meshes used in Apachi Heroes store:
+JdayT
+Robert
+Promethius
+PaleRider
+Garrymorrowind
+xzibition
+skeleton K
+Sen-chan
+MC
+Najaknevrec
+KafeiDotour
+
+--Thanks to JDFan for the filled bookcase meshes.
+--Thanks to Mdogger, XMarkstheSpot, and Grimdeath for the guar meshes.
+--Thanks to Xiamara for the pillow meshes and textures.
+--Thanks to Ancestral Ghost for the kwama egg meshes and textures.
+--Thanks to Mikal33 for the high-res sign texture.
+
+-----
+
+Textures that were used as a guide and resource
+====================================================
+CGtextures.com
+Darknut's High Res MW armor
+Westly's Almalexia replacer.
+Ghogiels Armor Resource
+Apachi Heroes store
+
+Dwemer Weapon Replacer by:
+* Ghogiel - original meshes and textures
+  --> New textures for Hel Borne's weapons are based on these.
+* Hel Borne - original meshes and textures of new Dwemer weapons
+* Fearabbit - new textures for Hel Borne's weapons (based on Ghogiel's ones)
+* Zu - various tweaks, new icons, and merging everything together.
+
+Trollf - Wooden Staff, Bow of Shadows
+InsanitySorrow - Chrysamere, potion bottles
+Dave91 - Scathecraw
+Vurt - Roobrush, Chokeweed
+WaalX - imperial shortsword\broadsword
+Mr_Siika - Durzog, Ash Vampire beard.
+taylorsd - equippable beard
+pufthemajicdragon - invisible activator
+Kafei - King Helseth's crown
+McMuffin - Colovian Helm meshes
