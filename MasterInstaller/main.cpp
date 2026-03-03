@@ -168,6 +168,25 @@ static std::wstring EnsureDataSubdir(std::wstring path)
     return path;
 }
 
+static std::wstring GetControlText(HWND control)
+{
+    if (!control)
+    {
+        return {};
+    }
+
+    const int length = GetWindowTextLengthW(control);
+    if (length <= 0)
+    {
+        return {};
+    }
+
+    std::wstring text(static_cast<size_t>(length) + 1, L'\0');
+    GetWindowTextW(control, text.data(), length + 1);
+    text.resize(static_cast<size_t>(length));
+    return text;
+}
+
 INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
@@ -304,9 +323,8 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case IDC_BTN_CONTINUE_TO_VERIFY:
         {
-            wchar_t installPathW[MAX_PATH] = {};
-            GetWindowTextW(hEditInstall, installPathW, MAX_PATH);
-            if (!*installPathW)
+            const std::wstring installPath = GetControlText(hEditInstall);
+            if (installPath.empty())
             {
                 MessageBoxW(dlg, L"Please choose a folder.", L"Error", MB_ICONWARNING);
                 break;
@@ -367,12 +385,11 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case IDC_BTN_CONTINUE_TO_INSTALL:
         {
-            wchar_t mwPathW[MAX_PATH] = {}, obPathW[MAX_PATH] = {};
-            GetWindowTextW(hEditMWPath, mwPathW, MAX_PATH);
-            GetWindowTextW(hEditOBPath, obPathW, MAX_PATH);
+            const std::wstring mwPath = GetControlText(hEditMWPath);
+            const std::wstring obPath = GetControlText(hEditOBPath);
 
-            bool mwOK = ValidateMorrowindFiles(mwPathW);
-            bool obOK = ValidateOblivionFiles(obPathW);
+            bool mwOK = ValidateMorrowindFiles(mwPath);
+            bool obOK = ValidateOblivionFiles(obPath);
 
             if (!mwOK || !obOK)
             {
@@ -383,10 +400,7 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 break;
             }
 
-            wchar_t installPathW[MAX_PATH] = {};
-            GetWindowTextW(hEditInstall, installPathW, MAX_PATH);
-            std::wstring installPath = installPathW;
-
+            const std::wstring installPath = GetControlText(hEditInstall);
             std::wstring dataFolder = EnsureDataSubdir(installPath);
 
             std::wstring finalText =
@@ -402,15 +416,14 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case IDC_BTN_INSTALL_MASTER:
         {
-            wchar_t installPathW[MAX_PATH] = {};
-            GetWindowTextW(hEditInstall, installPathW, MAX_PATH);
-            std::wstring installPath = installPathW;
+            std::wstring installPath = GetControlText(hEditInstall);
             if (installPath.empty())
             {
                 MessageBoxW(dlg, L"No install folder specified.", L"Error", MB_ICONERROR);
                 break;
             }
 
+            NormalizeBackslashes(installPath);
             std::wstring dataDir = EnsureDataSubdir(installPath);
 
             if (!CreateDirectoryRecursive(installPath) || !CreateDirectoryRecursive(dataDir))
@@ -420,7 +433,13 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
             }
 
             wchar_t exePath[MAX_PATH] = {};
-            GetModuleFileNameW(nullptr, exePath, MAX_PATH);
+            const DWORD exeLen = GetModuleFileNameW(nullptr, exePath, MAX_PATH);
+            if (exeLen == 0 || exeLen >= MAX_PATH)
+            {
+                MessageBoxW(dlg, L"Failed to resolve installer executable path.", L"Error", MB_ICONERROR);
+                break;
+            }
+
             std::wstring exeDir = exePath;
             size_t slash = exeDir.find_last_of(L"\\/");
             if (slash != std::wstring::npos) exeDir.resize(slash);
