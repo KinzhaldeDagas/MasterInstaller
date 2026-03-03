@@ -25,8 +25,6 @@ bool ExtractEmbeddedResource(UINT resId, const std::wstring& outputPath)
         return false;
 
     // 5) Write the raw data
-    ofs.write(reinterpret_cast<const char*>(pData), dataSize);
-    ofs.close();
-
-    return true;
+    ofs.write(reinterpret_cast<const char*>(pData), static_cast<std::streamsize>(dataSize));
+    return ofs.good();
 }

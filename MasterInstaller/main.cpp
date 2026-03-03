@@ -159,6 +159,15 @@ static void NormalizeBackslashes(std::wstring& s)
     while (n && (s[n - 1] == L'\\' || s[n - 1] == L'/')) { s.pop_back(); n = s.size(); }
 }
 
+static std::wstring EnsureDataSubdir(std::wstring path)
+{
+    if (path.size() < 4 || _wcsicmp(path.substr(path.size() - 4).c_str(), L"Data") != 0)
+    {
+        path += L"\\Data";
+    }
+    return path;
+}
+
 INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
@@ -378,11 +387,7 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
             GetWindowTextW(hEditInstall, installPathW, MAX_PATH);
             std::wstring installPath = installPathW;
 
-            std::wstring dataFolder = installPath;
-            if (dataFolder.size() < 4 || _wcsicmp(dataFolder.substr(dataFolder.size() - 4).c_str(), L"Data") != 0)
-            {
-                dataFolder += L"\\Data";
-            }
+            std::wstring dataFolder = EnsureDataSubdir(installPath);
 
             std::wstring finalText =
                 L"All Morroblivion files will be installed to:\r\n\r\n" +
@@ -406,11 +411,7 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 break;
             }
 
-            std::wstring dataDir = installPath;
-            if (dataDir.size() < 4 || _wcsicmp(dataDir.substr(dataDir.size() - 4).c_str(), L"Data") != 0)
-            {
-                dataDir += L"\\Data";
-            }
+            std::wstring dataDir = EnsureDataSubdir(installPath);
 
             if (!CreateDirectoryRecursive(installPath) || !CreateDirectoryRecursive(dataDir))
             {
@@ -495,8 +496,11 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int)
 {
     INITCOMMONCONTROLSEX icc = { sizeof(icc), ICC_STANDARD_CLASSES };
     InitCommonControlsEx(&icc);
-    CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    const HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_MAIN_DIALOG), nullptr, MainDlgProc, 0);
-    CoUninitialize();
+    if (SUCCEEDED(hr))
+    {
+        CoUninitialize();
+    }
     return 0;
 }
