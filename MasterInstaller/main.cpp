@@ -3,6 +3,7 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <string>
+#include <functional>
 #include "Resource.h"
 #include "Verify.h"
 #include "Installer.h"
@@ -18,6 +19,7 @@ static HWND hStaticOwnership, hStaticMWLabel, hEditMWPath, hBtnBrowseMW;
 static HWND hStaticOBLabel, hEditOBPath, hBtnBrowseOB, hBtnContinueToInstall;
 static HWND hStaticFinal, hBtnInstallMaster;
 static HWND hBtnAutoMW, hBtnAutoOB;
+static HWND hStaticInstallProgress, hProgressInstall;
 static HWND hTooltip;
 static std::wstring tipBuf;
 
@@ -82,6 +84,8 @@ static void ShowPage(HWND dlg, int page)
 
     ShowWindow(hStaticFinal, page == 3 ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnInstallMaster, page == 3 ? SW_SHOW : SW_HIDE);
+    ShowWindow(hStaticInstallProgress, page == 3 ? SW_SHOW : SW_HIDE);
+    ShowWindow(hProgressInstall, page == 3 ? SW_SHOW : SW_HIDE);
 
     EnableWindow(hStaticLegal, page == 0);
     EnableWindow(hBtnAccept, page == 0);
@@ -105,6 +109,8 @@ static void ShowPage(HWND dlg, int page)
 
     EnableWindow(hStaticFinal, page == 3);
     EnableWindow(hBtnInstallMaster, page == 3);
+    EnableWindow(hStaticInstallProgress, page == 3);
+    EnableWindow(hProgressInstall, page == 3);
 }
 
 static bool CreateDirectoryRecursive(const std::wstring& path)
@@ -120,7 +126,37 @@ static bool CreateDirectoryRecursive(const std::wstring& path)
     return CreateDirectoryW(path.c_str(), nullptr) || GetLastError() == ERROR_ALREADY_EXISTS;
 }
 
-static bool CopyDirectoryRecursively(const std::wstring& sourceDir, const std::wstring& targetDir)
+static bool CountFilesRecursively(const std::wstring& rootDir, int& totalFiles)
+{
+    WIN32_FIND_DATAW findData;
+    HANDLE hFind = INVALID_HANDLE_VALUE;
+
+    std::wstring searchPattern = rootDir + L"\\*";
+    hFind = FindFirstFileW(searchPattern.c_str(), &findData);
+    if (hFind == INVALID_HANDLE_VALUE) return false;
+
+    do
+    {
+        std::wstring name = findData.cFileName;
+        if (name == L"." || name == L"..") continue;
+
+        std::wstring childPath = rootDir + L"\\" + name;
+
+        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            if (!CountFilesRecursively(childPath, totalFiles)) { FindClose(hFind); return false; }
+        }
+        else
+        {
+            ++totalFiles;
+        }
+    } while (FindNextFileW(hFind, &findData) != 0);
+
+    FindClose(hFind);
+    return true;
+}
+
+static bool CopyDirectoryRecursivelyWithProgress(const std::wstring& sourceDir, const std::wstring& targetDir, const std::function<bool(const std::wstring&, const std::wstring&)>& onFile)
 {
     WIN32_FIND_DATAW findData;
     HANDLE hFind = INVALID_HANDLE_VALUE;
@@ -140,16 +176,38 @@ static bool CopyDirectoryRecursively(const std::wstring& sourceDir, const std::w
         if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             if (!CreateDirectoryRecursive(targetPath)) { FindClose(hFind); return false; }
-            if (!CopyDirectoryRecursively(sourcePath, targetPath)) { FindClose(hFind); return false; }
+            if (!CopyDirectoryRecursivelyWithProgress(sourcePath, targetPath, onFile)) { FindClose(hFind); return false; }
         }
         else
         {
+            if (onFile && !onFile(sourcePath, targetPath)) { FindClose(hFind); return false; }
             if (!CopyFileW(sourcePath.c_str(), targetPath.c_str(), FALSE)) { FindClose(hFind); return false; }
         }
     } while (FindNextFileW(hFind, &findData) != 0);
 
     FindClose(hFind);
     return true;
+}
+
+static void UpdateInstallProgress(HWND dlg, const std::wstring& fileFrom, const std::wstring& fileTo, int current, int total)
+{
+    std::wstring line = fileFrom.empty() ? L"Preparing installation..." : (L"Sending: " + fileFrom + L" -> " + fileTo);
+    SetWindowTextW(hStaticInstallProgress, line.c_str());
+    SendMessageW(hProgressInstall, PBM_SETRANGE32, 0, total > 0 ? total : 1);
+    SendMessageW(hProgressInstall, PBM_SETPOS, current, 0);
+
+    InvalidateRect(hStaticInstallProgress, nullptr, TRUE);
+    InvalidateRect(hProgressInstall, nullptr, TRUE);
+    UpdateWindow(hStaticInstallProgress);
+    UpdateWindow(hProgressInstall);
+    UpdateWindow(dlg);
+
+    MSG msg;
+    while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
 }
 
 static void NormalizeBackslashes(std::wstring& s)
@@ -222,6 +280,13 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
         hStaticFinal = GetDlgItem(dlg, IDC_STATIC_FINAL_TEXT);
         hBtnInstallMaster = GetDlgItem(dlg, IDC_BTN_INSTALL_MASTER);
+
+        hStaticInstallProgress = CreateWindowExW(0, L"STATIC", L"", WS_CHILD | SS_LEFT,
+            10, 172, 380, 14, dlg, nullptr, GetModuleHandle(nullptr), nullptr);
+        hProgressInstall = CreateWindowExW(0, PROGRESS_CLASSW, nullptr, WS_CHILD,
+            10, 188, 380, 12, dlg, nullptr, GetModuleHandle(nullptr), nullptr);
+        SendMessageW(hProgressInstall, PBM_SETRANGE32, 0, 1);
+        SendMessageW(hProgressInstall, PBM_SETPOS, 0, 0);
 
         hBtnAutoMW = GetDlgItem(dlg, IDC_BTN_AUTO_MW);
         hBtnAutoOB = GetDlgItem(dlg, IDC_BTN_AUTO_OB);
@@ -457,9 +522,50 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
             HCURSOR oldCur = SetCursor(LoadCursor(nullptr, IDC_WAIT));
             EnableWindow(hBtnInstallMaster, FALSE);
 
-            bool ok1 = ExtractEmbeddedResource(IDR_MORROWIND_OB_ESM, dataDir + L"\\Morrowind_ob.esm");
-            bool ok2 = ExtractEmbeddedResource(IDR_MORROWIND_OB_ESP, dataDir + L"\\Morrowind_ob.esp");
-            bool okCore = CopyDirectoryRecursively(sourceCoreDir, dataDir);
+            int totalFiles = 2;
+            if (!CountFilesRecursively(sourceCoreDir, totalFiles))
+            {
+                EnableWindow(hBtnInstallMaster, TRUE);
+                SetCursor(oldCur);
+                MessageBoxW(dlg, L"Failed to enumerate files in Resource\\00 Core.", L"Installation Error", MB_ICONERROR);
+                break;
+            }
+
+            int copiedFiles = 0;
+            UpdateInstallProgress(dlg, L"", L"", copiedFiles, totalFiles);
+
+            const std::wstring esmPath = dataDir + L"\\Morrowind_ob.esm";
+            const std::wstring espPath = dataDir + L"\\Morrowind_ob.esp";
+
+            UpdateInstallProgress(dlg, L"Embedded: Morrowind_ob.esm", esmPath, copiedFiles, totalFiles);
+            bool ok1 = ExtractEmbeddedResource(IDR_MORROWIND_OB_ESM, esmPath);
+            if (ok1)
+            {
+                ++copiedFiles;
+                UpdateInstallProgress(dlg, L"Embedded: Morrowind_ob.esm", esmPath, copiedFiles, totalFiles);
+            }
+
+            UpdateInstallProgress(dlg, L"Embedded: Morrowind_ob.esp", espPath, copiedFiles, totalFiles);
+            bool ok2 = ExtractEmbeddedResource(IDR_MORROWIND_OB_ESP, espPath);
+            if (ok2)
+            {
+                ++copiedFiles;
+                UpdateInstallProgress(dlg, L"Embedded: Morrowind_ob.esp", espPath, copiedFiles, totalFiles);
+            }
+
+            bool okCore = CopyDirectoryRecursivelyWithProgress(sourceCoreDir, dataDir,
+                [&](const std::wstring& from, const std::wstring& to)
+                {
+                    UpdateInstallProgress(dlg, from, to, copiedFiles, totalFiles);
+                    ++copiedFiles;
+                    UpdateInstallProgress(dlg, from, to, copiedFiles, totalFiles);
+                    return true;
+                });
+
+            if (ok1 && ok2 && okCore)
+            {
+                UpdateInstallProgress(dlg, L"Installation complete", dataDir, totalFiles, totalFiles);
+            }
 
             EnableWindow(hBtnInstallMaster, TRUE);
             SetCursor(oldCur);
@@ -513,7 +619,7 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int)
 {
-    INITCOMMONCONTROLSEX icc = { sizeof(icc), ICC_STANDARD_CLASSES };
+    INITCOMMONCONTROLSEX icc = { sizeof(icc), ICC_STANDARD_CLASSES | ICC_PROGRESS_CLASS };
     InitCommonControlsEx(&icc);
     const HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_MAIN_DIALOG), nullptr, MainDlgProc, 0);
