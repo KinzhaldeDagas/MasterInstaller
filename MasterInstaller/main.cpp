@@ -113,17 +113,19 @@ static void LayoutFinalPageControls(HWND dlg)
 
     const int margin = 10;
     const int fullWidth = (client.right - client.left) - (margin * 2);
-    const int finalTextHeight = 146;
-    const int statusY = 162;
-    const int progressY = 178;
+    const int progressWidth = (client.right - client.left) - 24;
+    const int progressX = ((client.right - client.left) - progressWidth) / 2;
+    const int finalTextHeight = 140;
+    const int statusY = 154;
+    const int progressY = 172;
     const int buttonWidth = 100;
     const int buttonHeight = 16;
     const int buttonX = ((client.right - client.left) - buttonWidth) / 2;
     const int buttonY = 210;
 
     SetControlRect(hStaticFinal, margin, 10, fullWidth, finalTextHeight);
-    SetControlRect(hStaticInstallProgress, margin, statusY, fullWidth, 14);
-    SetControlRect(hProgressInstall, margin, progressY, fullWidth, 14);
+    SetControlRect(hStaticInstallProgress, progressX, statusY, progressWidth, 14);
+    SetControlRect(hProgressInstall, progressX, progressY, progressWidth, 14);
     SetControlRect(hBtnInstallMaster, buttonX, buttonY, buttonWidth, buttonHeight);
 }
 
@@ -258,9 +260,25 @@ static bool CopyDirectoryRecursivelyWithProgress(const std::wstring& sourceDir, 
 
 static void UpdateInstallProgress(HWND dlg, const std::wstring& fileFrom, const std::wstring& fileTo, int current, int total)
 {
-    std::wstring line = fileFrom.empty() ? L"Preparing installation..." : (L"Sending: " + fileFrom + L" -> " + fileTo);
+    const int safeTotal = total > 0 ? total : 1;
+    const int pct = (current * 100) / safeTotal;
+    std::wstring line;
+    if (fileFrom.empty())
+    {
+        line = L"Preparing installation...";
+    }
+    else if (fileFrom == L"Installation complete")
+    {
+        line = L"Installation complete.";
+    }
+    else
+    {
+        line = L"Installing: " + fileFrom + L" (" + std::to_wstring(pct) + L"%)";
+    }
+
+    (void)fileTo;
     SetWindowTextW(hStaticInstallProgress, line.c_str());
-    SendMessageW(hProgressInstall, PBM_SETRANGE32, 0, total > 0 ? total : 1);
+    SendMessageW(hProgressInstall, PBM_SETRANGE32, 0, safeTotal);
     SendMessageW(hProgressInstall, PBM_SETPOS, current, 0);
 
     InvalidateRect(hStaticInstallProgress, nullptr, TRUE);
@@ -348,7 +366,7 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
         hStaticFinal = GetDlgItem(dlg, IDC_STATIC_FINAL_TEXT);
         hBtnInstallMaster = GetDlgItem(dlg, IDC_BTN_INSTALL_MASTER);
 
-        hStaticInstallProgress = CreateWindowExW(0, L"STATIC", L"", WS_CHILD | SS_LEFT,
+        hStaticInstallProgress = CreateWindowExW(0, L"STATIC", L"", WS_CHILD | SS_CENTER,
             10, 172, 380, 14, dlg, nullptr, GetModuleHandle(nullptr), nullptr);
         hProgressInstall = CreateWindowExW(0, PROGRESS_CLASSW, nullptr, WS_CHILD,
             10, 188, 380, 12, dlg, nullptr, GetModuleHandle(nullptr), nullptr);
@@ -538,9 +556,9 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
             std::wstring dataFolder = EnsureDataSubdir(installPath);
 
             std::wstring finalText =
-                L"All Morroblivion files will be installed to:\r\n\r\n" +
+                L"Morroblivion is ready to install.\r\n\r\nInstall location:\r\n" +
                 dataFolder + L"\r\n\r\n" +
-                L"Click 'Install' to begin copying. When installation finishes, click 'Close' to exit this installer.";
+                L"Click 'Install' to begin. When setup is complete, click 'Close' to exit.";
 
             SetWindowTextW(hStaticFinal, finalText.c_str());
             gInstallCompleted = false;
@@ -654,9 +672,9 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 SetWindowTextW(hStaticInstallProgress, L"Installation complete.");
 
                 std::wstring successText =
-                    L"Morroblivion was installed successfully to:\r\n\r\n" +
+                    L"Installation complete.\r\n\r\nInstalled to:\r\n" +
                     dataDir + L"\r\n\r\n" +
-                    L"Review the details above, then click 'Close' to exit the installer.";
+                    L"Click 'Close' to finish.";
                 SetWindowTextW(hStaticFinal, successText.c_str());
             }
             else
