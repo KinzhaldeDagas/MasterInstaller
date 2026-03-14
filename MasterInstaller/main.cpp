@@ -3,6 +3,7 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <string>
+#include <functional>
 #include "Resource.h"
 #include "Verify.h"
 #include "Installer.h"
@@ -18,8 +19,10 @@ static HWND hStaticOwnership, hStaticMWLabel, hEditMWPath, hBtnBrowseMW;
 static HWND hStaticOBLabel, hEditOBPath, hBtnBrowseOB, hBtnContinueToInstall;
 static HWND hStaticFinal, hBtnInstallMaster;
 static HWND hBtnAutoMW, hBtnAutoOB;
+static HWND hStaticInstallProgress, hProgressInstall;
 static HWND hTooltip;
 static std::wstring tipBuf;
+static bool gInstallCompleted = false;
 
 static const wchar_t* TIP_BROWSE_INSTALL = L"Browse to your Oblivion game folder where Morroblivion will be installed.";
 static const wchar_t* TIP_AUTO_INSTALL = L"Auto-detect your Oblivion folder and fill the path automatically.";
@@ -58,6 +61,28 @@ static std::wstring BrowseForFolder(HWND owner, const std::wstring& prompt)
     return result;
 }
 
+
+static void LayoutFinalPageControls(HWND dlg)
+{
+    RECT client{};
+    GetClientRect(dlg, &client);
+
+    const int margin = 10;
+    const int fullWidth = (client.right - client.left) - (margin * 2);
+    const int finalTextHeight = 146;
+    const int statusY = 162;
+    const int progressY = 178;
+    const int buttonWidth = 100;
+    const int buttonHeight = 16;
+    const int buttonX = ((client.right - client.left) - buttonWidth) / 2;
+    const int buttonY = 210;
+
+    SetWindowPos(hStaticFinal, nullptr, margin, 10, fullWidth, finalTextHeight, SWP_NOZORDER);
+    SetWindowPos(hStaticInstallProgress, nullptr, margin, statusY, fullWidth, 14, SWP_NOZORDER);
+    SetWindowPos(hProgressInstall, nullptr, margin, progressY, fullWidth, 14, SWP_NOZORDER);
+    SetWindowPos(hBtnInstallMaster, nullptr, buttonX, buttonY, buttonWidth, buttonHeight, SWP_NOZORDER);
+}
+
 static void ShowPage(HWND dlg, int page)
 {
     ShowWindow(hStaticLegal, page == 0 ? SW_SHOW : SW_HIDE);
@@ -82,6 +107,8 @@ static void ShowPage(HWND dlg, int page)
 
     ShowWindow(hStaticFinal, page == 3 ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnInstallMaster, page == 3 ? SW_SHOW : SW_HIDE);
+    ShowWindow(hStaticInstallProgress, page == 3 ? SW_SHOW : SW_HIDE);
+    ShowWindow(hProgressInstall, page == 3 ? SW_SHOW : SW_HIDE);
 
     EnableWindow(hStaticLegal, page == 0);
     EnableWindow(hBtnAccept, page == 0);
@@ -105,6 +132,19 @@ static void ShowPage(HWND dlg, int page)
 
     EnableWindow(hStaticFinal, page == 3);
     EnableWindow(hBtnInstallMaster, page == 3);
+    EnableWindow(hStaticInstallProgress, page == 3);
+    EnableWindow(hProgressInstall, page == 3);
+
+    if (page == 3)
+    {
+        LayoutFinalPageControls(dlg);
+        if (!gInstallCompleted)
+        {
+            SetWindowTextW(hBtnInstallMaster, L"Install");
+            SetWindowTextW(hStaticInstallProgress, L"Ready to install.");
+            SendMessageW(hProgressInstall, PBM_SETPOS, 0, 0);
+        }
+    }
 }
 
 static bool CreateDirectoryRecursive(const std::wstring& path)
@@ -120,7 +160,37 @@ static bool CreateDirectoryRecursive(const std::wstring& path)
     return CreateDirectoryW(path.c_str(), nullptr) || GetLastError() == ERROR_ALREADY_EXISTS;
 }
 
-static bool CopyDirectoryRecursively(const std::wstring& sourceDir, const std::wstring& targetDir)
+static bool CountFilesRecursively(const std::wstring& rootDir, int& totalFiles)
+{
+    WIN32_FIND_DATAW findData;
+    HANDLE hFind = INVALID_HANDLE_VALUE;
+
+    std::wstring searchPattern = rootDir + L"\\*";
+    hFind = FindFirstFileW(searchPattern.c_str(), &findData);
+    if (hFind == INVALID_HANDLE_VALUE) return false;
+
+    do
+    {
+        std::wstring name = findData.cFileName;
+        if (name == L"." || name == L"..") continue;
+
+        std::wstring childPath = rootDir + L"\\" + name;
+
+        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            if (!CountFilesRecursively(childPath, totalFiles)) { FindClose(hFind); return false; }
+        }
+        else
+        {
+            ++totalFiles;
+        }
+    } while (FindNextFileW(hFind, &findData) != 0);
+
+    FindClose(hFind);
+    return true;
+}
+
+static bool CopyDirectoryRecursivelyWithProgress(const std::wstring& sourceDir, const std::wstring& targetDir, const std::function<bool(const std::wstring&, const std::wstring&)>& onFile)
 {
     WIN32_FIND_DATAW findData;
     HANDLE hFind = INVALID_HANDLE_VALUE;
@@ -140,16 +210,38 @@ static bool CopyDirectoryRecursively(const std::wstring& sourceDir, const std::w
         if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             if (!CreateDirectoryRecursive(targetPath)) { FindClose(hFind); return false; }
-            if (!CopyDirectoryRecursively(sourcePath, targetPath)) { FindClose(hFind); return false; }
+            if (!CopyDirectoryRecursivelyWithProgress(sourcePath, targetPath, onFile)) { FindClose(hFind); return false; }
         }
         else
         {
+            if (onFile && !onFile(sourcePath, targetPath)) { FindClose(hFind); return false; }
             if (!CopyFileW(sourcePath.c_str(), targetPath.c_str(), FALSE)) { FindClose(hFind); return false; }
         }
     } while (FindNextFileW(hFind, &findData) != 0);
 
     FindClose(hFind);
     return true;
+}
+
+static void UpdateInstallProgress(HWND dlg, const std::wstring& fileFrom, const std::wstring& fileTo, int current, int total)
+{
+    std::wstring line = fileFrom.empty() ? L"Preparing installation..." : (fileFrom + L"  →  " + fileTo);
+    SetWindowTextW(hStaticInstallProgress, line.c_str());
+    SendMessageW(hProgressInstall, PBM_SETRANGE32, 0, total > 0 ? total : 1);
+    SendMessageW(hProgressInstall, PBM_SETPOS, current, 0);
+
+    InvalidateRect(hStaticInstallProgress, nullptr, TRUE);
+    InvalidateRect(hProgressInstall, nullptr, TRUE);
+    UpdateWindow(hStaticInstallProgress);
+    UpdateWindow(hProgressInstall);
+    UpdateWindow(dlg);
+
+    MSG msg;
+    while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
 }
 
 static void NormalizeBackslashes(std::wstring& s)
@@ -222,6 +314,14 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
         hStaticFinal = GetDlgItem(dlg, IDC_STATIC_FINAL_TEXT);
         hBtnInstallMaster = GetDlgItem(dlg, IDC_BTN_INSTALL_MASTER);
+
+        hStaticInstallProgress = CreateWindowExW(0, L"STATIC", L"Ready to install.", WS_CHILD | SS_LEFT,
+            10, 172, 380, 14, dlg, nullptr, GetModuleHandle(nullptr), nullptr);
+        hProgressInstall = CreateWindowExW(0, PROGRESS_CLASSW, nullptr, WS_CHILD,
+            10, 190, 380, 14, dlg, nullptr, GetModuleHandle(nullptr), nullptr);
+        SendMessageW(hProgressInstall, PBM_SETRANGE32, 0, 1);
+        SendMessageW(hProgressInstall, PBM_SETPOS, 0, 0);
+        LayoutFinalPageControls(dlg);
 
         hBtnAutoMW = GetDlgItem(dlg, IDC_BTN_AUTO_MW);
         hBtnAutoOB = GetDlgItem(dlg, IDC_BTN_AUTO_OB);
@@ -406,9 +506,11 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
             std::wstring finalText =
                 L"All Morroblivion files will be installed to:\r\n\r\n" +
                 dataFolder + L"\r\n\r\n" +
-                L"Click 'Install' to begin copying. When installation finishes, click 'Finish' to exit this installer.";
+                L"Click 'Install' to begin copying. When installation finishes, click 'Close' to exit this installer.";
 
             SetWindowTextW(hStaticFinal, finalText.c_str());
+            gInstallCompleted = false;
+            SetWindowTextW(hBtnInstallMaster, L"Install");
 
             ShowPage(dlg, 3);
             return TRUE;
@@ -416,6 +518,12 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case IDC_BTN_INSTALL_MASTER:
         {
+            if (gInstallCompleted)
+            {
+                EndDialog(dlg, IDOK);
+                return TRUE;
+            }
+
             std::wstring installPath = GetControlText(hEditInstall);
             if (installPath.empty())
             {
@@ -457,17 +565,65 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
             HCURSOR oldCur = SetCursor(LoadCursor(nullptr, IDC_WAIT));
             EnableWindow(hBtnInstallMaster, FALSE);
 
-            bool ok1 = ExtractEmbeddedResource(IDR_MORROWIND_OB_ESM, dataDir + L"\\Morrowind_ob.esm");
-            bool ok2 = ExtractEmbeddedResource(IDR_MORROWIND_OB_ESP, dataDir + L"\\Morrowind_ob.esp");
-            bool okCore = CopyDirectoryRecursively(sourceCoreDir, dataDir);
+            int totalFiles = 2;
+            if (!CountFilesRecursively(sourceCoreDir, totalFiles))
+            {
+                EnableWindow(hBtnInstallMaster, TRUE);
+                SetCursor(oldCur);
+                MessageBoxW(dlg, L"Failed to enumerate files in Resource\\00 Core.", L"Installation Error", MB_ICONERROR);
+                break;
+            }
+
+            int copiedFiles = 0;
+            UpdateInstallProgress(dlg, L"", L"", copiedFiles, totalFiles);
+
+            const std::wstring esmPath = dataDir + L"\\Morrowind_ob.esm";
+            const std::wstring espPath = dataDir + L"\\Morrowind_ob.esp";
+
+            UpdateInstallProgress(dlg, L"Embedded: Morrowind_ob.esm", esmPath, copiedFiles, totalFiles);
+            bool ok1 = ExtractEmbeddedResource(IDR_MORROWIND_OB_ESM, esmPath);
+            if (ok1)
+            {
+                ++copiedFiles;
+                UpdateInstallProgress(dlg, L"Embedded: Morrowind_ob.esm", esmPath, copiedFiles, totalFiles);
+            }
+
+            UpdateInstallProgress(dlg, L"Embedded: Morrowind_ob.esp", espPath, copiedFiles, totalFiles);
+            bool ok2 = ExtractEmbeddedResource(IDR_MORROWIND_OB_ESP, espPath);
+            if (ok2)
+            {
+                ++copiedFiles;
+                UpdateInstallProgress(dlg, L"Embedded: Morrowind_ob.esp", espPath, copiedFiles, totalFiles);
+            }
+
+            bool okCore = CopyDirectoryRecursivelyWithProgress(sourceCoreDir, dataDir,
+                [&](const std::wstring& from, const std::wstring& to)
+                {
+                    UpdateInstallProgress(dlg, from, to, copiedFiles, totalFiles);
+                    ++copiedFiles;
+                    UpdateInstallProgress(dlg, from, to, copiedFiles, totalFiles);
+                    return true;
+                });
+
+            if (ok1 && ok2 && okCore)
+            {
+                UpdateInstallProgress(dlg, L"Installation complete", dataDir, totalFiles, totalFiles);
+            }
 
             EnableWindow(hBtnInstallMaster, TRUE);
             SetCursor(oldCur);
 
             if (ok1 && ok2 && okCore)
             {
-                MessageBoxW(dlg, L"The Elder Scrolls Renewal Project: Morroblivion installed successfully!", L"Success", MB_ICONINFORMATION);
-                EndDialog(dlg, IDOK);
+                gInstallCompleted = true;
+                SetWindowTextW(hBtnInstallMaster, L"Close");
+                SetWindowTextW(hStaticInstallProgress, L"Installation complete.");
+
+                std::wstring successText =
+                    L"Morroblivion was installed successfully to:\r\n\r\n" +
+                    dataDir + L"\r\n\r\n" +
+                    L"Review the details above, then click 'Close' to exit the installer.";
+                SetWindowTextW(hStaticFinal, successText.c_str());
             }
             else
             {
@@ -476,6 +632,7 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 if (!ok2) errMsg += L"  • Failed to extract Morrowind_ob.esp\r\n";
                 if (!okCore) errMsg += L"  • Failed to copy Resource\\00 Core contents\r\n";
                 errMsg += L"\r\nTarget: " + dataDir;
+                SetWindowTextW(hBtnInstallMaster, L"Install");
                 MessageBoxW(dlg, errMsg.c_str(), L"Installation Error", MB_ICONERROR);
             }
             return TRUE;
@@ -513,7 +670,7 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int)
 {
-    INITCOMMONCONTROLSEX icc = { sizeof(icc), ICC_STANDARD_CLASSES };
+    INITCOMMONCONTROLSEX icc = { sizeof(icc), ICC_STANDARD_CLASSES | ICC_PROGRESS_CLASS };
     InitCommonControlsEx(&icc);
     const HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_MAIN_DIALOG), nullptr, MainDlgProc, 0);
