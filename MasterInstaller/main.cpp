@@ -61,6 +61,50 @@ static std::wstring BrowseForFolder(HWND owner, const std::wstring& prompt)
     return result;
 }
 
+static void SetControlRect(HWND control, int x, int y, int width, int height)
+{
+    SetWindowPos(control, nullptr, x, y, width, height, SWP_NOZORDER);
+}
+
+static void LayoutWizardPages(HWND dlg)
+{
+    RECT client{};
+    GetClientRect(dlg, &client);
+
+    const int margin = 10;
+    const int fullWidth = (client.right - client.left) - (margin * 2);
+    const int labelHeight = 20;
+    const int editHeight = 16;
+    const int buttonHeight = 16;
+    const int buttonWidth = 80;
+    const int buttonWidthSmall = 64;
+    const int centerButtonX = ((client.right - client.left) - 100) / 2;
+    const int nextButtonX = (client.right - client.left) - margin - buttonWidth;
+
+    // Step 1: legal
+    SetControlRect(hStaticLegal, margin, margin, fullWidth, 172);
+    SetControlRect(hBtnAccept, centerButtonX, 214, 100, buttonHeight);
+
+    // Step 2: install location
+    SetControlRect(hStaticSelectInstall, margin, margin, fullWidth, labelHeight);
+    SetControlRect(hEditInstall, margin, 36, 240, editHeight);
+    SetControlRect(hBtnBrowseInstall, 256, 36, buttonWidthSmall, buttonHeight);
+    SetControlRect(hBtnAutoInstall, 324, 36, buttonWidthSmall, buttonHeight);
+    SetControlRect(hBtnContinueToVerify, nextButtonX, 214, buttonWidth, buttonHeight);
+
+    // Step 3: ownership verification
+    SetControlRect(hStaticOwnership, margin, margin, fullWidth, labelHeight);
+    SetControlRect(hStaticMWLabel, margin, 36, 120, 14);
+    SetControlRect(hEditMWPath, margin, 52, 240, editHeight);
+    SetControlRect(hBtnBrowseMW, 256, 52, buttonWidthSmall, buttonHeight);
+    SetControlRect(hBtnAutoMW, 324, 52, buttonWidthSmall, buttonHeight);
+    SetControlRect(hStaticOBLabel, margin, 88, 120, 14);
+    SetControlRect(hEditOBPath, margin, 104, 240, editHeight);
+    SetControlRect(hBtnBrowseOB, 256, 104, buttonWidthSmall, buttonHeight);
+    SetControlRect(hBtnAutoOB, 324, 104, buttonWidthSmall, buttonHeight);
+    SetControlRect(hBtnContinueToInstall, nextButtonX, 214, buttonWidth, buttonHeight);
+}
+
 
 static void LayoutFinalPageControls(HWND dlg)
 {
@@ -77,10 +121,10 @@ static void LayoutFinalPageControls(HWND dlg)
     const int buttonX = ((client.right - client.left) - buttonWidth) / 2;
     const int buttonY = 210;
 
-    SetWindowPos(hStaticFinal, nullptr, margin, 10, fullWidth, finalTextHeight, SWP_NOZORDER);
-    SetWindowPos(hStaticInstallProgress, nullptr, margin, statusY, fullWidth, 14, SWP_NOZORDER);
-    SetWindowPos(hProgressInstall, nullptr, margin, progressY, fullWidth, 14, SWP_NOZORDER);
-    SetWindowPos(hBtnInstallMaster, nullptr, buttonX, buttonY, buttonWidth, buttonHeight, SWP_NOZORDER);
+    SetControlRect(hStaticFinal, margin, 10, fullWidth, finalTextHeight);
+    SetControlRect(hStaticInstallProgress, margin, statusY, fullWidth, 14);
+    SetControlRect(hProgressInstall, margin, progressY, fullWidth, 14);
+    SetControlRect(hBtnInstallMaster, buttonX, buttonY, buttonWidth, buttonHeight);
 }
 
 static void ShowPage(HWND dlg, int page)
@@ -134,6 +178,8 @@ static void ShowPage(HWND dlg, int page)
     EnableWindow(hBtnInstallMaster, page == 3);
     EnableWindow(hStaticInstallProgress, page == 3);
     EnableWindow(hProgressInstall, page == 3);
+
+    LayoutWizardPages(dlg);
 
     if (page == 3)
     {
@@ -325,6 +371,8 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
         hBtnAutoMW = GetDlgItem(dlg, IDC_BTN_AUTO_MW);
         hBtnAutoOB = GetDlgItem(dlg, IDC_BTN_AUTO_OB);
+
+        LayoutWizardPages(dlg);
 
         std::wstring legalText =
             L"TERMS AND CONDITIONS\r\n"
