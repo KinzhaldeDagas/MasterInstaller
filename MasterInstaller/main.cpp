@@ -178,19 +178,6 @@ static void ShowPage(HWND dlg, int page)
     EnableWindow(hBtnInstallMaster, page == 3);
     EnableWindow(hStaticInstallProgress, page == 3);
     EnableWindow(hProgressInstall, page == 3);
-
-    LayoutWizardPages(dlg);
-
-    if (page == 3)
-    {
-        LayoutFinalPageControls(dlg);
-        if (!gInstallCompleted)
-        {
-            SetWindowTextW(hBtnInstallMaster, L"Install");
-            SetWindowTextW(hStaticInstallProgress, L"Ready to install.");
-            SendMessageW(hProgressInstall, PBM_SETPOS, 0, 0);
-        }
-    }
 }
 
 static bool CreateDirectoryRecursive(const std::wstring& path)
@@ -271,7 +258,7 @@ static bool CopyDirectoryRecursivelyWithProgress(const std::wstring& sourceDir, 
 
 static void UpdateInstallProgress(HWND dlg, const std::wstring& fileFrom, const std::wstring& fileTo, int current, int total)
 {
-    std::wstring line = fileFrom.empty() ? L"Preparing installation..." : (fileFrom + L"  →  " + fileTo);
+    std::wstring line = fileFrom.empty() ? L"Preparing installation..." : (L"Sending: " + fileFrom + L" -> " + fileTo);
     SetWindowTextW(hStaticInstallProgress, line.c_str());
     SendMessageW(hProgressInstall, PBM_SETRANGE32, 0, total > 0 ? total : 1);
     SendMessageW(hProgressInstall, PBM_SETPOS, current, 0);
@@ -361,13 +348,12 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
         hStaticFinal = GetDlgItem(dlg, IDC_STATIC_FINAL_TEXT);
         hBtnInstallMaster = GetDlgItem(dlg, IDC_BTN_INSTALL_MASTER);
 
-        hStaticInstallProgress = CreateWindowExW(0, L"STATIC", L"Ready to install.", WS_CHILD | SS_LEFT,
+        hStaticInstallProgress = CreateWindowExW(0, L"STATIC", L"", WS_CHILD | SS_LEFT,
             10, 172, 380, 14, dlg, nullptr, GetModuleHandle(nullptr), nullptr);
         hProgressInstall = CreateWindowExW(0, PROGRESS_CLASSW, nullptr, WS_CHILD,
-            10, 190, 380, 14, dlg, nullptr, GetModuleHandle(nullptr), nullptr);
+            10, 188, 380, 12, dlg, nullptr, GetModuleHandle(nullptr), nullptr);
         SendMessageW(hProgressInstall, PBM_SETRANGE32, 0, 1);
         SendMessageW(hProgressInstall, PBM_SETPOS, 0, 0);
-        LayoutFinalPageControls(dlg);
 
         hBtnAutoMW = GetDlgItem(dlg, IDC_BTN_AUTO_MW);
         hBtnAutoOB = GetDlgItem(dlg, IDC_BTN_AUTO_OB);
