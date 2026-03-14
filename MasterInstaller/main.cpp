@@ -71,38 +71,51 @@ static void LayoutWizardPages(HWND dlg)
     RECT client{};
     GetClientRect(dlg, &client);
 
-    const int margin = 10;
-    const int fullWidth = (client.right - client.left) - (margin * 2);
+    const int clientWidth = client.right - client.left;
+    const int clientHeight = client.bottom - client.top;
+    const int margin = 12;
+    const int gap = 8;
+    const int fullWidth = clientWidth - (margin * 2);
     const int labelHeight = 20;
-    const int editHeight = 16;
-    const int buttonHeight = 16;
-    const int buttonWidth = 80;
-    const int buttonWidthSmall = 64;
-    const int centerButtonX = ((client.right - client.left) - 100) / 2;
-    const int nextButtonX = (client.right - client.left) - margin - buttonWidth;
+    const int editHeight = 24;
+    const int buttonHeight = 28;
+    const int buttonWidth = 108;
+    const int bottomY = clientHeight - margin - buttonHeight;
+    const int centerButtonX = (clientWidth - buttonWidth) / 2;
+    const int nextButtonX = clientWidth - margin - buttonWidth;
+
+    const int actionButtonsY = margin + labelHeight + gap;
+    const int actionButtonWidth = 90;
+    const int browseButtonsX = clientWidth - margin - ((actionButtonWidth * 2) + gap);
+    const int pathEditWidth = browseButtonsX - gap - margin;
+    const int autoButtonX = browseButtonsX + actionButtonWidth + gap;
+
+    const int legalBottomGap = 14;
+    const int legalHeight = bottomY - margin - legalBottomGap;
+    const int secondRowY = actionButtonsY + editHeight + 26;
 
     // Step 1: legal
-    SetControlRect(hStaticLegal, margin, margin, fullWidth, 172);
-    SetControlRect(hBtnAccept, centerButtonX, 214, 100, buttonHeight);
+    SetControlRect(hStaticLegal, margin, margin, fullWidth, legalHeight);
+    SetControlRect(hBtnAccept, centerButtonX, bottomY, buttonWidth, buttonHeight);
 
     // Step 2: install location
     SetControlRect(hStaticSelectInstall, margin, margin, fullWidth, labelHeight);
-    SetControlRect(hEditInstall, margin, 36, 240, editHeight);
-    SetControlRect(hBtnBrowseInstall, 256, 36, buttonWidthSmall, buttonHeight);
-    SetControlRect(hBtnAutoInstall, 324, 36, buttonWidthSmall, buttonHeight);
-    SetControlRect(hBtnContinueToVerify, nextButtonX, 214, buttonWidth, buttonHeight);
+    SetControlRect(hEditInstall, margin, actionButtonsY, pathEditWidth, editHeight);
+    SetControlRect(hBtnBrowseInstall, browseButtonsX, actionButtonsY - 2, actionButtonWidth, buttonHeight);
+    SetControlRect(hBtnAutoInstall, autoButtonX, actionButtonsY - 2, actionButtonWidth, buttonHeight);
+    SetControlRect(hBtnContinueToVerify, nextButtonX, bottomY, buttonWidth, buttonHeight);
 
     // Step 3: ownership verification
     SetControlRect(hStaticOwnership, margin, margin, fullWidth, labelHeight);
-    SetControlRect(hStaticMWLabel, margin, 36, 120, 14);
-    SetControlRect(hEditMWPath, margin, 52, 240, editHeight);
-    SetControlRect(hBtnBrowseMW, 256, 52, buttonWidthSmall, buttonHeight);
-    SetControlRect(hBtnAutoMW, 324, 52, buttonWidthSmall, buttonHeight);
-    SetControlRect(hStaticOBLabel, margin, 88, 120, 14);
-    SetControlRect(hEditOBPath, margin, 104, 240, editHeight);
-    SetControlRect(hBtnBrowseOB, 256, 104, buttonWidthSmall, buttonHeight);
-    SetControlRect(hBtnAutoOB, 324, 104, buttonWidthSmall, buttonHeight);
-    SetControlRect(hBtnContinueToInstall, nextButtonX, 214, buttonWidth, buttonHeight);
+    SetControlRect(hStaticMWLabel, margin, actionButtonsY, 180, 16);
+    SetControlRect(hEditMWPath, margin, actionButtonsY + 18, pathEditWidth, editHeight);
+    SetControlRect(hBtnBrowseMW, browseButtonsX, actionButtonsY + 16, actionButtonWidth, buttonHeight);
+    SetControlRect(hBtnAutoMW, autoButtonX, actionButtonsY + 16, actionButtonWidth, buttonHeight);
+    SetControlRect(hStaticOBLabel, margin, secondRowY, 180, 16);
+    SetControlRect(hEditOBPath, margin, secondRowY + 18, pathEditWidth, editHeight);
+    SetControlRect(hBtnBrowseOB, browseButtonsX, secondRowY + 16, actionButtonWidth, buttonHeight);
+    SetControlRect(hBtnAutoOB, autoButtonX, secondRowY + 16, actionButtonWidth, buttonHeight);
+    SetControlRect(hBtnContinueToInstall, nextButtonX, bottomY, buttonWidth, buttonHeight);
 }
 
 
@@ -111,21 +124,23 @@ static void LayoutFinalPageControls(HWND dlg)
     RECT client{};
     GetClientRect(dlg, &client);
 
-    const int margin = 10;
-    const int fullWidth = (client.right - client.left) - (margin * 2);
-    const int progressWidth = (client.right - client.left) - 24;
-    const int progressX = ((client.right - client.left) - progressWidth) / 2;
-    const int finalTextHeight = 140;
-    const int statusY = 154;
-    const int progressY = 172;
-    const int buttonWidth = 100;
-    const int buttonHeight = 16;
-    const int buttonX = ((client.right - client.left) - buttonWidth) / 2;
-    const int buttonY = 210;
+    const int clientWidth = client.right - client.left;
+    const int clientHeight = client.bottom - client.top;
+    const int margin = 12;
+    const int fullWidth = clientWidth - (margin * 2);
+    const int progressWidth = fullWidth;
+    const int progressX = margin;
+    const int buttonWidth = 108;
+    const int buttonHeight = 28;
+    const int buttonX = (clientWidth - buttonWidth) / 2;
+    const int buttonY = clientHeight - margin - buttonHeight;
+    const int progressY = buttonY - 34;
+    const int statusY = progressY - 20;
+    const int finalTextHeight = statusY - margin - 8;
 
-    SetControlRect(hStaticFinal, margin, 10, fullWidth, finalTextHeight);
-    SetControlRect(hStaticInstallProgress, progressX, statusY, progressWidth, 14);
-    SetControlRect(hProgressInstall, progressX, progressY, progressWidth, 14);
+    SetControlRect(hStaticFinal, margin, margin, fullWidth, finalTextHeight);
+    SetControlRect(hStaticInstallProgress, progressX, statusY, progressWidth, 18);
+    SetControlRect(hProgressInstall, progressX, progressY, progressWidth, 18);
     SetControlRect(hBtnInstallMaster, buttonX, buttonY, buttonWidth, buttonHeight);
 }
 
@@ -377,6 +392,7 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
         hBtnAutoOB = GetDlgItem(dlg, IDC_BTN_AUTO_OB);
 
         LayoutWizardPages(dlg);
+        LayoutFinalPageControls(dlg);
 
         std::wstring legalText =
             L"TERMS AND CONDITIONS\r\n"
