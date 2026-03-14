@@ -22,6 +22,7 @@ static HWND hBtnAutoMW, hBtnAutoOB;
 static HWND hStaticInstallProgress, hProgressInstall;
 static HWND hTooltip;
 static std::wstring tipBuf;
+static bool gInstallCompleted = false;
 
 static const wchar_t* TIP_BROWSE_INSTALL = L"Browse to your Oblivion game folder where Morroblivion will be installed.";
 static const wchar_t* TIP_AUTO_INSTALL = L"Auto-detect your Oblivion folder and fill the path automatically.";
@@ -58,6 +59,72 @@ static std::wstring BrowseForFolder(HWND owner, const std::wstring& prompt)
         CoTaskMemFree(pidl);
     }
     return result;
+}
+
+static void SetControlRect(HWND control, int x, int y, int width, int height)
+{
+    SetWindowPos(control, nullptr, x, y, width, height, SWP_NOZORDER);
+}
+
+static void LayoutWizardPages(HWND dlg)
+{
+    RECT client{};
+    GetClientRect(dlg, &client);
+
+    const int margin = 10;
+    const int fullWidth = (client.right - client.left) - (margin * 2);
+    const int labelHeight = 20;
+    const int editHeight = 16;
+    const int buttonHeight = 16;
+    const int buttonWidth = 80;
+    const int buttonWidthSmall = 64;
+    const int centerButtonX = ((client.right - client.left) - 100) / 2;
+    const int nextButtonX = (client.right - client.left) - margin - buttonWidth;
+
+    // Step 1: legal
+    SetControlRect(hStaticLegal, margin, margin, fullWidth, 172);
+    SetControlRect(hBtnAccept, centerButtonX, 214, 100, buttonHeight);
+
+    // Step 2: install location
+    SetControlRect(hStaticSelectInstall, margin, margin, fullWidth, labelHeight);
+    SetControlRect(hEditInstall, margin, 36, 240, editHeight);
+    SetControlRect(hBtnBrowseInstall, 256, 36, buttonWidthSmall, buttonHeight);
+    SetControlRect(hBtnAutoInstall, 324, 36, buttonWidthSmall, buttonHeight);
+    SetControlRect(hBtnContinueToVerify, nextButtonX, 214, buttonWidth, buttonHeight);
+
+    // Step 3: ownership verification
+    SetControlRect(hStaticOwnership, margin, margin, fullWidth, labelHeight);
+    SetControlRect(hStaticMWLabel, margin, 36, 120, 14);
+    SetControlRect(hEditMWPath, margin, 52, 240, editHeight);
+    SetControlRect(hBtnBrowseMW, 256, 52, buttonWidthSmall, buttonHeight);
+    SetControlRect(hBtnAutoMW, 324, 52, buttonWidthSmall, buttonHeight);
+    SetControlRect(hStaticOBLabel, margin, 88, 120, 14);
+    SetControlRect(hEditOBPath, margin, 104, 240, editHeight);
+    SetControlRect(hBtnBrowseOB, 256, 104, buttonWidthSmall, buttonHeight);
+    SetControlRect(hBtnAutoOB, 324, 104, buttonWidthSmall, buttonHeight);
+    SetControlRect(hBtnContinueToInstall, nextButtonX, 214, buttonWidth, buttonHeight);
+}
+
+
+static void LayoutFinalPageControls(HWND dlg)
+{
+    RECT client{};
+    GetClientRect(dlg, &client);
+
+    const int margin = 10;
+    const int fullWidth = (client.right - client.left) - (margin * 2);
+    const int finalTextHeight = 146;
+    const int statusY = 162;
+    const int progressY = 178;
+    const int buttonWidth = 100;
+    const int buttonHeight = 16;
+    const int buttonX = ((client.right - client.left) - buttonWidth) / 2;
+    const int buttonY = 210;
+
+    SetControlRect(hStaticFinal, margin, 10, fullWidth, finalTextHeight);
+    SetControlRect(hStaticInstallProgress, margin, statusY, fullWidth, 14);
+    SetControlRect(hProgressInstall, margin, progressY, fullWidth, 14);
+    SetControlRect(hBtnInstallMaster, buttonX, buttonY, buttonWidth, buttonHeight);
 }
 
 static void ShowPage(HWND dlg, int page)
@@ -291,6 +358,8 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
         hBtnAutoMW = GetDlgItem(dlg, IDC_BTN_AUTO_MW);
         hBtnAutoOB = GetDlgItem(dlg, IDC_BTN_AUTO_OB);
 
+        LayoutWizardPages(dlg);
+
         std::wstring legalText =
             L"TERMS AND CONDITIONS\r\n"
             L"\r\n"
@@ -471,9 +540,11 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
             std::wstring finalText =
                 L"All Morroblivion files will be installed to:\r\n\r\n" +
                 dataFolder + L"\r\n\r\n" +
-                L"Click 'Install' to begin copying. When installation finishes, click 'Finish' to exit this installer.";
+                L"Click 'Install' to begin copying. When installation finishes, click 'Close' to exit this installer.";
 
             SetWindowTextW(hStaticFinal, finalText.c_str());
+            gInstallCompleted = false;
+            SetWindowTextW(hBtnInstallMaster, L"Install");
 
             ShowPage(dlg, 3);
             return TRUE;
@@ -481,6 +552,12 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case IDC_BTN_INSTALL_MASTER:
         {
+            if (gInstallCompleted)
+            {
+                EndDialog(dlg, IDOK);
+                return TRUE;
+            }
+
             std::wstring installPath = GetControlText(hEditInstall);
             if (installPath.empty())
             {
@@ -572,8 +649,15 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
             if (ok1 && ok2 && okCore)
             {
-                MessageBoxW(dlg, L"The Elder Scrolls Renewal Project: Morroblivion installed successfully!", L"Success", MB_ICONINFORMATION);
-                EndDialog(dlg, IDOK);
+                gInstallCompleted = true;
+                SetWindowTextW(hBtnInstallMaster, L"Close");
+                SetWindowTextW(hStaticInstallProgress, L"Installation complete.");
+
+                std::wstring successText =
+                    L"Morroblivion was installed successfully to:\r\n\r\n" +
+                    dataDir + L"\r\n\r\n" +
+                    L"Review the details above, then click 'Close' to exit the installer.";
+                SetWindowTextW(hStaticFinal, successText.c_str());
             }
             else
             {
@@ -582,6 +666,7 @@ INT_PTR CALLBACK MainDlgProc(HWND dlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 if (!ok2) errMsg += L"  • Failed to extract Morrowind_ob.esp\r\n";
                 if (!okCore) errMsg += L"  • Failed to copy Resource\\00 Core contents\r\n";
                 errMsg += L"\r\nTarget: " + dataDir;
+                SetWindowTextW(hBtnInstallMaster, L"Install");
                 MessageBoxW(dlg, errMsg.c_str(), L"Installation Error", MB_ICONERROR);
             }
             return TRUE;
